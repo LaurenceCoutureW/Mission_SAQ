@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7f7f5">
+<title>Mission SAQ — Simulation</title>
+<style>
+:root{--ink:#343638;--muted:#707477;--orange:#ef861f;--paper:#fbfbfa;--line:#d9dbd9;--road:#454849;--green:#3d765c;--red:#a94d3e}
+*{box-sizing:border-box}body{margin:0;background:#f0f0ee;color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+.shell{max-width:1080px;margin:auto;min-height:100vh;background:var(--paper);padding:clamp(16px,3vw,34px)}
+.top{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.mark{width:32px;height:32px;border:3px solid var(--orange);transform:rotate(-12deg);display:grid;place-items:center;color:var(--orange);font-weight:900}
+.kicker{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.top small{margin-left:auto;color:#929594;letter-spacing:.1em;text-transform:uppercase}
+h1{font-size:clamp(30px,5vw,48px);font-weight:500;letter-spacing:-.035em;margin:28px 0 5px}
+h2{font-size:clamp(20px,3vw,26px);font-weight:500;margin:4px 0 10px}
+.sub{font-size:16px;color:var(--muted);line-height:1.5;margin:0 0 20px}
+.panel{border:1px solid var(--line);background:#fff;padding:clamp(14px,2.5vw,22px);margin:18px 0}
+.field{display:block;font-size:12px;color:var(--muted);font-weight:bold;margin:0 0 7px}
+input{font:inherit;padding:12px;border:1px solid #bfc2c0;width:min(100%,340px);border-radius:2px}
+button{font:inherit;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:white;padding:12px 16px;font-weight:700;border-radius:2px}
+button.orange{background:var(--orange);border-color:var(--orange);color:#222}
+button.secondary{background:white;color:var(--ink);border-color:#bfc2c0}
+button:disabled{opacity:.35;cursor:not-allowed}
+.hidden{display:none!important}
+.mapwrap{background:#f5f5f3;border:1px solid var(--line);padding:5px}
+svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.road-edge{fill:none;stroke:#f9f9f7;stroke-width:2.5}
+.road{fill:none;stroke:var(--road);stroke-linecap:round;stroke-linejoin:round}
+.road-center{fill:none;stroke:#f5f5f3;stroke-width:2.5;stroke-dasharray:14 12}
+.node{fill:#fff;stroke:#aeb2b0;stroke-width:3}
+.street-label rect{fill:#f5f5f3;stroke:#d2d4d1;stroke-width:1;rx:3}
+.street-label text{fill:#454849;font-size:11px;font-weight:700;letter-spacing:.02em}
+.place{font-size:14px;fill:#343638;font-weight:700}
+.small{font-size:10px;fill:#747878}
+.car-body{fill:var(--orange);stroke:#242526;stroke-width:2}
+.car-glass{fill:#fff;stroke:#242526;stroke-width:1.2}
+.car-wheel{fill:#242526}
+.cone{fill:var(--orange);stroke:#272727;stroke-width:1.5}
+.legend{display:flex;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:12px;padding:10px 3px}
+.legend i{display:inline-block;width:10px;height:10px;background:var(--orange);margin-right:6px}
+.progress{height:5px;background:#e5e6e3;margin:12px 0}.progress span{display:block;height:100%;background:var(--orange);width:0}
+.meta{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}.meta strong{color:var(--ink)}
+.prompt{border-left:4px solid var(--orange);background:#fff2e2;padding:15px;margin-top:14px}
+.choices{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.choice{background:white;color:var(--ink);border:1px solid #c6c8c6;text-align:left;flex:1 1 190px;min-height:52px}
+.choice:hover{border-color:var(--orange);background:#fffaf3}
+.feedback{padding:12px;border:1px solid var(--line);background:#fff;margin-top:12px;line-height:1.45}
+.score{font-size:clamp(52px,10vw,82px);font-weight:600;color:var(--orange);letter-spacing:-.06em;line-height:1}
+.profile{font-size:clamp(24px,4vw,34px);font-weight:700;margin:9px 0}
+.fine{font-size:12px;color:var(--muted);line-height:1.5}
+.footer{border-top:1px solid var(--line);margin-top:28px;padding-top:14px;color:#929594;font-size:11px;letter-spacing:.1em;text-transform:uppercase;display:flex;justify-content:space-between}
+@media(max-width:620px){.shell{padding:13px}.top small{display:none}.sub{font-size:14px}.mapwrap{padding:1px}.street-label text{font-size:14px}.place{font-size:17px}.choice{flex-basis:100%}}
+</style></head>
+<body><main class="shell">
+<header class="top"><div class="mark">↗</div><div class="kicker">Dossier confidentiel · Simulation</div><small>Document de circulation interne</small></header>
+<section id="intro"><h1>MISSION SAQ</h1><p class="sub">Un trajet. Plusieurs itinéraires. Une série de décisions.<br>Votre destination : la SAQ. Votre comportement sera observé.</p>
+<div class="panel"><h2>Avant de prendre la route</h2><p class="sub">Inscrivez votre prénom ou un pseudonyme. Aux intersections, choisissez votre direction et adaptez votre trajet aux conditions de circulation.</p>
+<label class="field" for="player">IDENTIFICATION DU CONDUCTEUR</label><input id="player" maxlength="24" placeholder="Votre prénom ou pseudonyme"><p><button class="orange" id="start">Démarrer la simulation →</button></p></div>
+<p class="fine">Durée estimée : 3 à 5 minutes · Jeu individuel · Aucun compte requis</p></section>
+
+<section id="game" class="hidden">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 12px"><div><div class="kicker">Trajet en cours</div><h2>Chez moi → SAQ</h2></div><div class="meta"><span>Conducteur : <strong id="who"></strong></span><span>Décisions : <strong id="moves">0</strong></span><span>Distance : <strong id="distance">0,0 km</strong></span></div></div>
+<div class="mapwrap"><svg id="map" viewBox="0 0 800 510" role="img" aria-label="Plan fictif du quartier, rues et cônes">
+<g id="roads"></g><g id="labels"></g><g id="nodes"></g><g id="places"></g><g id="car"></g></svg></div>
+<div class="legend"><span><i></i>Cônes de signalisation</span><span>○ Intersection</span><span>→ Sens unique</span><span>↔ Double sens</span><span>Plan fictif du quartier</span></div><div class="progress"><span id="bar"></span></div>
+<div class="panel"><div class="kicker" id="location">Chez moi</div><h2 id="prompt">Quelle direction choisissez-vous ?</h2><p class="sub" id="hint" style="margin:0;font-size:14px">Les choix proposés correspondent aux rues accessibles depuis votre position.</p><div id="choices" class="choices"></div><div id="feedback" class="feedback hidden" aria-live="polite"></div></div>
+<div style="text-align:right"><button class="secondary" id="restart">Recommencer</button></div></section>
+
+<section id="result" class="hidden"><h1>RAPPORT DE CONFORMITÉ</h1><p class="sub">Trajet terminé. Votre comportement routier a été analysé.</p>
+<div class="panel"><div class="kicker">Indice de conformité · <span id="resultName"></span></div><div class="score"><span id="score">0</span><span style="font-size:24px">/100</span></div><div class="profile" id="type"></div><p class="sub" id="description" style="margin:0"></p></div>
+<div class="panel"><h2>Votre parcours en chiffres</h2><div class="meta" style="font-size:15px;gap:22px"><span>Consignes suivies : <strong id="obeyed">0</strong></span><span>Consignes ignorées : <strong id="ignored">0</strong></span><span>Détours : <strong id="detours">0</strong></span><span>Erreurs : <strong id="errors">0</strong></span></div></div>
+<div class="panel"><h2>Votre code de résultat</h2><p id="summary"></p><button class="orange" id="copy">Copier mon résultat</button> <span id="copied" class="fine"></span></div>
+<p class="fine">« Merci de votre collaboration. Votre comportement routier a été analysé. »<br>Résultat ludique créé pour la simulation.</p><button class="secondary" id="again">Rejouer</button></section>
+<footer class="footer"><span>Mission SAQ · Simulation de conformité</span><span>Fin du document</span></footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const P={
+ H:{x:75,y:430,label:"Chez moi",place:"home"},A:{x:245,y:430},B:{x:415,y:430},C:{x:585,y:430},D:{x:755,y:430},
+ E:{x:245,y:290},F:{x:415,y:290},G:{x:585,y:290},I:{x:755,y:290},
+ J:{x:245,y:150},K:{x:415,y:150},L:{x:585,y:150},S:{x:755,y:150,label:"SAQ",place:"saq"}
+};
+const E=[["H","A","Rue des Érables",52],["A","B","Rue des Érables",52],["B","C","Rue des Érables",52],["C","D","Rue des Érables",52],
+["A","E","1re Avenue",42],["E","F","Avenue du Parc",50],["F","G","Avenue du Parc",50],["G","I","Avenue du Parc",50],["I","D","2e Avenue",42],
+["E","J","Rue des Pins",42],["J","K","Boulevard du Nord",54],["K","L","Boulevard du Nord",54],["L","S","Rue du Marché",42],
+["B","F","2e Avenue",42],["C","G","3e Avenue",42],["F","K","Rue des Écoles",42],["G","L","Rue des Écoles",42],["D","I","Rue du Stade",42]];
+const cone={
+ "A-B":{kind:"inutile",text:"Deux cônes orange sont installés sur l'accotement. Aucun travail ni danger visible."},
+ "E-F":{kind:"utile",text:"Une barrière et des travailleurs indiquent que la voie est réellement fermée."},
+ "K-L":{kind:"inutile",text:"Un cône orange est placé au milieu de la rue, pourtant complètement dégagée."},
+ "C-D":{kind:"inutile",text:"Une rangée de cônes longe le trottoir sans raison apparente."}
+};
+const edges={},adj={};Object.keys(P).forEach(k=>adj[k]=[]);
+E.forEach(([a,b,name,w])=>{const key=edge(a,b);edges[key]={a,b,name,w};adj[a].push(b);adj[b].push(a)});
+// Certaines rues sont à sens unique (sens indiqué par la flèche); les autres sont à double sens.
+const ONE_WAY={
+ "A-B":["A","B"], "C-D":["C","D"], "E-F":["E","F"], "G-I":["G","I"],
+ "K-L":["K","L"], "L-S":["L","S"]
+};
+function canGo(from,to){
+ const ow=ONE_WAY[edge(from,to)];
+ return !ow || (ow[0]===from && ow[1]===to);
+}
+// Les rues avec cônes ralentissent davantage si on choisit de passer au milieu,
+// tandis que certaines petites rues parallèles offrent un passage plus direct.
+const ROAD_KM={
+ "A-B":1.4,"E-F":1.5,"K-L":1.4,"C-D":1.4,
+ "A-E":0.6,"E-J":0.6,"J-K":0.6,"L-S":0.6,"B-F":0.6,
+ "F-K":0.35,"F-G":0.35,"G-L":0.35,"G-I":0.6,"C-G":0.6,"D-I":0.6
+};
+function edge(a,b){return [a,b].sort().join("-")}
+let current="H",previous=null,heading={x:1,y:0},player="",moves=0,score=0,obeyed=0,ignored=0,detours=0,route=[],pending=null,distance=0,errors=0;
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function draw(){
+ let road="",labels="";
+ E.forEach(([a,b,name,w])=>{
+  const p=P[a],q=P[b],dx=q.x-p.x,dy=q.y-p.y,ang=Math.atan2(dy,dx)*180/Math.PI,mx=(p.x+q.x)/2,my=(p.y+q.y)/2;
+  road+=`<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="#454849" stroke-width="${w}" stroke-linecap="round"/>`;
+  road+=`<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" class="road-center"/>`;
+  // A name plaque is offset from the road centreline to keep lane markings visible.
+  const off=(a.charCodeAt(0)+b.charCodeAt(0))%2===0?-24:24;
+  const lx=mx+(-dy/Math.hypot(dx,dy))*off,ly=my+(dx/Math.hypot(dx,dy))*off;
+  labels+=`<g class="street-label" transform="translate(${lx} ${ly}) rotate(${Math.abs(ang)>90?ang+180:ang})"><rect x="-55" y="-10" width="110" height="19"/><text text-anchor="middle" y="4">${esc(name)}</text></g>`;
+  const ow=ONE_WAY[edge(a,b)];
+  if(ow){
+    const from=P[ow[0]],to=P[ow[1]],t=.58,ax=from.x+(to.x-from.x)*t,ay=from.y+(to.y-from.y)*t,aa=Math.atan2(to.y-from.y,to.x-from.x)*180/Math.PI;
+    labels+=`<g transform="translate(${ax} ${ay}) rotate(${aa})"><path d="M-8 -5 L2 0 L-8 5 Z" fill="#fff" stroke="#252728" stroke-width="1.2"/></g>`;
+  }
+  const c=cone[edge(a,b)];
+  if(c){const cx=mx,cy=my;road+=`<g transform="translate(${cx} ${cy})"><path class="cone" d="M-10 10 L0 -12 L10 10 Z"/><path d="M-5 4 H5" stroke="white" stroke-width="2.5"/></g>`}
+ });
+ $("roads").innerHTML=road;$("labels").innerHTML=labels;
+ $("nodes").innerHTML=Object.entries(P).map(([id,p])=>`<circle class="node" cx="${p.x}" cy="${p.y}" r="7"/>`).join("");
+ $("places").innerHTML=`<text class="place" x="${P.H.x}" y="${P.H.y-37}" text-anchor="middle">⌂ CHEZ MOI</text><rect x="${P.S.x-31}" y="${P.S.y-48}" width="62" height="27" rx="3" fill="#ef861f"/><text x="${P.S.x}" y="${P.S.y-29}" text-anchor="middle" font-size="14" font-weight="bold" fill="#222">SAQ</text>`;
+}
+function car(x,y,angle){return `<g transform="translate(${x} ${y}) rotate(${angle})"><rect class="car-body" x="-18" y="-11" width="36" height="22" rx="6"/><path class="car-glass" d="M-9 -8 H7 L13 -4 V4 L7 8 H-9 L-13 4 V-4 Z"/><rect class="car-wheel" x="-12" y="-13" width="7" height="3" rx="1"/><rect class="car-wheel" x="6" y="-13" width="7" height="3" rx="1"/><rect class="car-wheel" x="-12" y="10" width="7" height="3" rx="1"/><rect class="car-wheel" x="6" y="10" width="7" height="3" rx="1"/><path d="M16 -4 L23 0 L16 4 Z" fill="#fff"/></g>`}
+function drawCar(){const p=P[current],ang=Math.atan2(heading.y,heading.x)*180/Math.PI;$("car").innerHTML=car(p.x,p.y,ang)}
+function direction(from,to){
+ const p=P[from],q=P[to],v={x:q.x-p.x,y:q.y-p.y};
+ const dot=heading.x*v.x+heading.y*v.y,cross=heading.x*v.y-heading.y*v.x;
+ if(dot<-.5)return "Faire demi-tour";
+ if(Math.abs(cross)<.5)return "Continuer tout droit";
+ return cross>0?"Tourner à droite":"Tourner à gauche";
+}
+function show(){
+ $("location").textContent=P[current].label||"Intersection · "+current;
+ $("moves").textContent=moves;$("bar").style.width=Math.min(100,(moves/9)*100)+"%";$("feedback").classList.add("hidden");
+ if(current==="S"){finish();return}
+ let choices=adj[current].filter(n=>canGo(current,n));
+ if(choices.length===0 && previous && canGo(current,previous)) choices=[previous];
+ $("prompt").textContent="Quelle direction choisissez-vous ?";
+ $("hint").textContent="Les directions sont indiquées selon l'orientation actuelle de votre voiture.";
+ $("choices").innerHTML="";
+ choices.forEach(n=>{
+  const dir=(n===previous?"Faire demi-tour":direction(current,n)),b=document.createElement("button");b.className="choice";b.textContent=dir+" · "+(edges[edge(current,n)].name)+(ONE_WAY[edge(current,n)]?" · sens unique":" · double sens");
+  b.onclick=()=>choose(n);$("choices").appendChild(b);
+ });
+ drawCar();
+}
+function feedback(title,msg){$("feedback").classList.remove("hidden");$("feedback").innerHTML="<strong>"+title+"</strong><br>"+msg}
+function choose(next){
+ const ev=cone[edge(current,next)];
+ if(ev){
+  pending=next;$("prompt").textContent="Signalisation orange sur cette rue";
+  $("hint").textContent=ev.text+(edge(current,next)==="K-L"?" Un itinéraire alternatif sans cônes est accessible par la rue des Écoles et l'avenue du Parc.":"");$("choices").innerHTML="";
+  const b1=document.createElement("button");b1.className="choice";b1.textContent="Respecter les cônes · prendre une rue parallèle";b1.onclick=()=>resolve(true);$("choices").appendChild(b1);
+  const b2=document.createElement("button");b2.className="choice";b2.textContent="Passer à côté des cônes";b2.onclick=()=>resolve(false);$("choices").appendChild(b2);
+ }else move(next);
+}
+function resolve(respect){
+ const next=pending,ev=cone[edge(current,next)];pending=null;
+ if(respect){
+  obeyed++;detours++;
+  // Toute obéissance à la signalisation augmente la conformité,
+  // même lorsque le cône ne correspond à aucun danger réel.
+  feedback(ev.kind==="utile"?"Signalisation respectée":"Détour effectué","Vous avez choisi de suivre les cônes. "+(ev.kind==="inutile"?"La rue était pourtant dégagée.":"La fermeture était justifiée."));
+  // Stay at the intersection and show only the other available roads.
+  let alternatives=adj[current].filter(n=>n!==next&&canGo(current,n));
+  // Si aucune autre branche n'est accessible, le demi-tour est proposé
+  // uniquement si la rue d'où vient la voiture est à double sens.
+  if(!alternatives.length && previous && canGo(current,previous)) alternatives=[previous];
+  $("choices").innerHTML="";
+  alternatives.forEach(n=>{const b=document.createElement("button");b.className="choice";b.textContent=(n===previous?"Faire demi-tour":direction(current,n))+" · "+edges[edge(current,n)].name+(ONE_WAY[edge(current,n)]?" · sens unique":" · double sens");b.onclick=()=>move(n);$("choices").appendChild(b)});
+  if(!alternatives.length){
+    const b=document.createElement("button");b.className="choice";b.textContent="Revenir à la dernière intersection";b.onclick=()=>{if(previous && canGo(current,previous))move(previous);else {feedback("Itinéraire bloqué","Cette rue ne permet pas de détour. Revenez à l'intersection précédente.");}};
+    $("choices").appendChild(b);
+  }
+  $("hint").textContent="Vous restez à l'intersection. Choisissez une autre rue pour contourner les cônes. Les rues à double sens permettent un demi-tour.";
+ }else{
+  ignored++;
+  // Toute désobéissance à une consigne affichée réduit la conformité,
+  // même lorsque le cône semble inutile.
+  if(ev.kind==="utile"){
+   feedback("Voie fermée","Vous avez tenté de passer malgré une fermeture réelle. Vous devez choisir une autre rue.");
+   $("choices").innerHTML="";adj[current].filter(n=>n!==next&&canGo(current,n)).forEach(n=>{const b=document.createElement("button");b.className="choice";b.textContent=(n===previous?"Faire demi-tour":direction(current,n))+" · "+edges[edge(current,n)].name+(ONE_WAY[edge(current,n)]?" · sens unique":" · double sens");b.onclick=()=>move(n);$("choices").appendChild(b)});
+  }else{feedback("Signalisation ignorée","Aucun danger réel n'était visible. Vous poursuivez votre route.");move(next)}
+ }
+}
+function move(next){
+ const old=current,p=P[old],q=P[next];distance+=(ROAD_KM[edge(old,next)]||0.9);$("distance").textContent=distance.toFixed(1).replace(".",",")+" km";heading={x:q.x-p.x,y:q.y-p.y};previous=old;current=next;moves++;route.push(next);drawCar();
+ if(current==="S"){finish();return}show();
+}
+function start(){
+ player=$("player").value.trim()||"Conducteur anonyme";current="H";previous=null;heading={x:1,y:0};moves=score=obeyed=ignored=detours=0;distance=0;errors=0;$("distance").textContent="0,0 km";route=[];pending=null;
+ $("who").textContent=player;$("intro").classList.add("hidden");$("result").classList.add("hidden");$("game").classList.remove("hidden");draw();drawCar();show();
+}
+function finish(){
+ $("game").classList.add("hidden");$("result").classList.remove("hidden");
+ const value=Math.max(0,Math.min(100,100-errors*15));
+ let type,desc;if(value<40){type="LE REBELLE";desc="Vous avez ignoré plusieurs indications importantes. Votre indépendance prend parfois le dessus sur les règles de circulation."}
+ else if(value<75){type="LE CITOYEN MODÈLE";desc="Vous respectez une partie des indications, mais vous vous permettez parfois de remettre en question les consignes."}
+ else{type="DÉJÀ RECRUTÉ";desc="Vous suivez les consignes affichées, même lorsqu'elles semblent inutiles. Votre conformité est exemplaire."}
+ $("resultName").textContent=player;$("score").textContent=value;$("type").textContent=type;$("description").textContent=desc;
+ $("obeyed").textContent=obeyed;$("ignored").textContent=ignored;$("detours").textContent=detours;$("errors").textContent=errors;
+ $("summary").textContent=player+" — "+type+" — Indice de conformité : "+value+"/100. Cônes respectés : "+obeyed+"; cônes ignorés : "+ignored+"; détours : "+detours+".";
+}
+$("start").onclick=start;$("restart").onclick=start;$("again").onclick=start;
+$("copy").onclick=async()=>{try{await navigator.clipboard.writeText($("summary").textContent);$("copied").textContent="Résultat copié !"}catch(e){$("copied").textContent="Copiez manuellement la ligne de résultat."}};
+draw();
+</script></body></html>
